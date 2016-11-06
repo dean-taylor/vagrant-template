@@ -1,0 +1,3 @@
+[submodule "build"]
+	path = build
+	url = /Users/lodean/cloudstor/software-build.git

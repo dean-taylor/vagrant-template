@@ -1,0 +1,10 @@
+- name: host01
+  synced_folders:
+    example:
+      src: 'relative/path/example'
+      dest: '/absolute/path/example'
+  cpus: 2
+  gui: true
+  memory: 2048		# 2GiB
+  hdd: true		# Attach extra hard drive
+- name: host02
