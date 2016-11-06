@@ -2,6 +2,7 @@
 # vi: set ft=ruby :
 
 require 'yaml'
+require 'socket'
 
 if File.exist?('vagrant_hosts.yml')
   hosts = YAML.load_file('vagrant_hosts.yml')
@@ -9,7 +10,7 @@ else
   hosts = [{'name' => 'default'}]
 end
 
-hostname = ENV["HOSTNAME"]
+hostname = Socket.gethostbyname(Socket.gethostname).first
 dir_basename = File.basename(File.expand_path(File.dirname(__FILE__)))
 
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
