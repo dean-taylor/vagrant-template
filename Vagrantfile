@@ -94,6 +94,7 @@ Vagrant.configure(2) do |config|
   # Provision hosts detailed in vagrant_hosts.yml
   hosts.each do |host|
     config.vm.define host['name'] do |node|
+      node.vm.box = "#{host['box']}" if host.has_key?('box')
       node.vm.hostname = "#{host['name']}.#{dir_basename}.#{hostname}"
       # config.vm.network "forwarded_port", guest: 80, host: 8080
       if host.has_key?('synced_folders')
