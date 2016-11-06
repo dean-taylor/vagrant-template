@@ -10,6 +10,10 @@ d_modules='/etc/puppet/modules'
 [[ $EUID -eq 0 ]] || { echo "Run as root user."; exit 1; }
 
 yum -y install deltarpm epel-release kernel-devel
+
+major=$(cat /etc/system-release-cpe | cut -d':' -f 5)
+sudo rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-el-${major}.noarch.rpm
+
 yum -y install \
   dkms \
   git \
