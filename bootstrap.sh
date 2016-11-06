@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 modules=( \
-  puppetlabs-stdlib \
-  puppetlabs-concat \
-  puppetlabs-ntp \
+  'puppetlabs-stdlib --version 4.13.1' \
+  'puppetlabs-concat --version 2.2.0' \
+  'puppetlabs-ntp --version 4.2.0' \
 )
 d_modules='/etc/puppet/modules'
 
@@ -16,7 +16,7 @@ yum -y install \
   puppet \
   tmux
 
-rsync -ro /vagrant/skel/ /home/vagrant/
+[ -d /vagrant/skel ] && rsync -ro --exclude '.gitignore' /vagrant/skel/ /home/vagrant/
 
 # Ensure Git operations are first so that conflicts in Puppet install
 # dependancy resolution are less likely to occur.
@@ -24,16 +24,19 @@ rsync -ro /vagrant/skel/ /home/vagrant/
 [[ -d "${d_modules}" ]] || mkdir -p "${d_modules}"
 cd "${d_modules}"
 
-for module in ${modules[@]}; do
+for module in "${modules[@]}"; do
+echo "  puppet module install $module"
   puppet module install $module
-  d_module=${module##*-}
-  grep -q "${d_module}/" .gitignore || echo "${d_module}/" >>.gitignore
+  d_module=${module#*-}; d_module=${d_module%% *}
+  grep -q "/${d_module}/" .gitignore || echo "/${d_module}/" >>.gitignore
 done
 
 cd /etc
-git init
-cat >>.gitignore <<EOF
+if [ ! -d .git ]; then
+  git init
+  cat >>.gitignore <<EOF
 /puppet/
 EOF
-git add .
-git commit -m 'initial commit'
+  git add .
+  git commit -m 'initial commit'
+fi
