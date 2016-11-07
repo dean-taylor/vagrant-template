@@ -5,9 +5,39 @@ tmp='/vagrant/tmp'
 tmp_hosts="${tmp}/etc_hosts"	# This file can be write locked to ensure consistency
 dev='eth1'
 
-HOSTNAME=$(hostnamectl status |sed -n '/Static hostname:/ s/^\s*Static hostname:\s\+\(.*\)$/\1/p')
-ALIAS=${HOSTNAME#*.}
+set -e
 
+function update_tmp_hosts {
+  ip=${1}; shift
+  fqdn=${1}; shift
+
+  host="${ip} ${fqdn}"
+  [[ ${#} -gt 0 ]] && host="${host} $@"
+
+  eval $(read line <"${tmp_hosts}" && echo ${line#*#})
+  (( sn++ ))
+
+  sed -i \
+    -e '/^#sn=/s/^.*$/#sn='"${sn}"'/' \
+    -e '/\s'"${fqdn}"'/{h;s/^.*$/'"${host}"'/};${x;/^$/{s//'"${host}"'/;H};x}' \
+    "${tmp_hosts}"
+}
+
+if whereis hostname &>/dev/null; then
+  if ! HOSTNAME=$(hostname --fqdn 2>/dev/null); then
+    HOSTNAME=$(hostname --short 2>/dev/null)
+    ALIAS=''
+  else
+    ALIAS=$(hostname --short 2>/dev/null)
+  fi
+else
+  HOSTNAME=$(hostnamectl status |sed -n '/Static hostname:/ s/^\s*Static hostname:\s\+\(.*\)$/\1/p')
+  ALIAS=${HOSTNAME#*.}
+fi
+
+[ -d "${tmp}" ] || mkdir -p "${tmp}"
+
+# Create hosts reference file if it does not exist
 if [[ ! -f "${tmp_hosts}" ]]; then
   cat >"${tmp_hosts}" <<EOF
 #sn=0
@@ -66,36 +96,25 @@ case "${BASENAME}" in
     done
   ;;
   *)
-    ip_addr_all=$(ip addr show dev $dev scope global up) || exit 0
-    ip_addr=$(echo $ip_addr_all |sed 's;^.*\s\+inet\s\+\([0-9.]\+\).*$;\1;')
+    if ! grep -q '^#sn=' <(head -n1 /etc/hosts); then
+      ip_addr_all=$(ip addr show dev $dev scope global up) || exit 0
+      ip_addr=$(echo $ip_addr_all |sed 's;^.*\s\+inet\s\+\([0-9.]\+\).*$;\1;')
 
-    host="${ip_addr} ${HOSTNAME} ${ALIAS}"
-    grep -q "${host}" "${tmp_hosts}" || echo "${host}" >>"${tmp_hosts}"
+      update_tmp_hosts ${ip_addr} ${HOSTNAME} ${ALIAS}
 
-    IFS=$'\r\n' GLOBIGNORE='*' command eval 'hosts=($(</vagrant/tmp/etc_hosts))'
-    for host in "${hosts[@]}"; do
-      grep -q "${host}" /etc/hosts || echo "${host}" >>/etc/hosts
-    done
+    fi
   ;;
 esac
 
-exit 0
-
-[[ $EUID == 0 ]] || { echo 'Run as root'; exit 1; }
-
-if [[ -z $ip_addr ]]; then
-  ip_addr_all=$(ip addr show dev $dev scope global up) || exit 0
-  ip_addr=$(echo $ip_addr_all |sed 's;^.*\s\+inet\s\+\([0-9.]\+\).*$;\1;')
+# Update local /etc/hosts if sn do not match
+eval $(read line <"${tmp_hosts}" && echo ${line#*#})
+read -r line </etc/hosts
+if echo "${line}" |grep -q '^#sn='; then
+  sn_tmp_hosts=$sn
+  eval "${line#*#}"
+  [[ $sn_tmp_hosts -gt $sn ]] && cp "${tmp_hosts}" /etc/hosts
+else
+  cp "${tmp_hosts}" /etc/hosts
 fi
-[[ -z $name ]]    && name=$(hostname --fqdn 2>/dev/null)
-[[ -z $alias ]]   && alias=$(hostname --short 2>/dev/null)
-
-host="${ip_addr} ${name} ${alias}"
-
-# Check host entries with Vagrant records
-
-while read host; do
-  grep -q "${host}" /etc/hosts || echo "${host}" >>/etc/hosts
-done <"${tmp_hosts}"
 
 exit 0
