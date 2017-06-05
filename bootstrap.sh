@@ -12,12 +12,16 @@ modules=( \
 )
 d_modules='/etc/puppet/modules'
 
+dpkg_release=( jessie precise squeeze trusty utopic wheezy )
+
 [[ $EUID -eq 0 ]] || { echo "Run as root user."; exit 1; }
 
 case $ID_LIKE in
-  "debian" )
-    [ -f /tmp/puppetlabs-release-${VERSION_CODENAME}.deb ] || { cd /tmp; curl -L -O https://apt.puppetlabs.com/puppetlabs-release-${VERSION_CODENAME}.deb; }
-    dpkg -i /tmp/puppetlabs-release-${VERSION_CODENAME}.deb
+  "debian")
+    if [[ " ${dpkg_release[@]} " =~ " ${VERSION_CODENAME} " ]]; then
+      [ -f /tmp/puppetlabs-release-${VERSION_CODENAME}.deb ] || { cd /tmp; curl -L -O https://apt.puppetlabs.com/puppetlabs-release-${VERSION_CODENAME}.deb; }
+      dpkg -i /tmp/puppetlabs-release-${VERSION_CODENAME}.deb
+    fi
 
     apt-get update && apt-get -y install \
       augeas-tools \
@@ -26,7 +30,7 @@ case $ID_LIKE in
       puppet \
       tmux
   ;;
-  * )
+  *)
     major=$(cat /etc/system-release-cpe | cut -d':' -f 5)
     rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-el-${major}.noarch.rpm
 
