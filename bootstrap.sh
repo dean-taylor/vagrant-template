@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+ID=ubuntu
+ID_LIKE=debian
+VERSION_ID="16.04"
+[ -f /etc/os-release ] && . /etc/os-release
+
 modules=( \
   'puppetlabs-stdlib --version 4.13.1' \
   'puppetlabs-concat --version 2.2.0' \
@@ -9,16 +14,32 @@ d_modules='/etc/puppet/modules'
 
 [[ $EUID -eq 0 ]] || { echo "Run as root user."; exit 1; }
 
-yum -y install deltarpm epel-release kernel-devel
+case $ID_LIKE in
+  "debian" )
+    [ -f /tmp/puppetlabs-release-${VERSION_CODENAME}.deb ] || { cd /tmp; curl -L -O https://apt.puppetlabs.com/puppetlabs-release-${VERSION_CODENAME}.deb; }
+    dpkg -i /tmp/puppetlabs-release-${VERSION_CODENAME}.deb
 
-major=$(cat /etc/system-release-cpe | cut -d':' -f 5)
-sudo rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-el-${major}.noarch.rpm
+    apt-get update && apt-get -y install \
+      augeas-tools \
+      dkms \
+      git \
+      puppet \
+      tmux
+  ;;
+  * )
+    major=$(cat /etc/system-release-cpe | cut -d':' -f 5)
+    rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-el-${major}.noarch.rpm
 
-yum -y install \
-  dkms \
-  git \
-  puppet \
-  tmux
+    yum -y install \
+      deltrpm \
+      epel-release \
+      kernel-devel \
+      dkms \
+      git \
+      puppet \
+      tmux
+  ;;
+esac
 
 [ -d /vagrant/skel ] && rsync -ro --exclude '.gitignore' /vagrant/skel/ /home/vagrant/
 
