@@ -10,7 +10,11 @@ else
   hosts = [{'name' => 'default'}]
 end
 
-hostname = Socket.gethostbyname(Socket.gethostname).first
+begin
+  hostname = Socket.gethostbyname(Socket.gethostname).first
+rescue
+  hostname = 'ght'
+end
 dir_basename = File.basename(File.expand_path(File.dirname(__FILE__)))
 
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
