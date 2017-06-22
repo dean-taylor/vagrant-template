@@ -85,7 +85,7 @@ Vagrant.configure(2) do |config|
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "bootstrap", type: "shell", path: "bootstrap.sh"
-  config.vm.provision "etc_hosts", type: "shell", path: "etc_hosts.sh" if hosts.count > 1
+  #config.vm.provision "etc_hosts", type: "shell", path: "etc_hosts.sh" if hosts.count > 1
 
   config.vm.provision "puppet" do |puppet|
     puppet.manifests_path    = "puppet/manifests"
