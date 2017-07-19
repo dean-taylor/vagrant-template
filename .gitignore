@@ -3,3 +3,5 @@
 /vagrant_hosts.yml
 *.rpmnew
 /tmp/
+/docker-*
+*.log

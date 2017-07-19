@@ -102,6 +102,11 @@ Vagrant.configure(2) do |config|
       node.vm.box = "#{host['box']}" if host.has_key?('box')
       node.vm.hostname = "#{host['name']}.#{dir_basename}.#{hostname}"
       # config.vm.network "forwarded_port", guest: 80, host: 8080
+      if host.has_key?('forwarded_ports')
+        host['forwarded_ports'].each do |forwarded_port|
+          node.vm.network "forwarded_port", guest: 8000, host_ip: "127.0.0.1", host: 8000, protocol: "tcp", auto_correct: true
+        end
+      end
       if host.has_key?('synced_folders')
         host['synced_folders'].each do |synced_folder|
           node.vm.synced_folder synced_folder['src'], synced_folder['dest'], type: "virtualbox"
