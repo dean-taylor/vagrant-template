@@ -122,10 +122,10 @@ Vagrant.configure(2) do |config|
            vb.customize ['storageattach',:id,'--storagectl','IDE Controller','--port',1,'--device',0,'--type','hdd','--medium',"#{host['name']}.vdi"]
          end
       end
-    end
-    if host.has_key?('provisioners')
-      host['provisioners'].each do |provision|
-        node.vm.provision "#{provision['name']}", type: "shell", path: "bin/#{provision['script']}"
+      if host.has_key?('provisioners')
+        host['provisioners'].each do |provision|
+          node.vm.provision "#{provision['name']}", type: "shell", path: Dir.glob("bin.d/**/#{provision['script']}")[0]
+        end
       end
     end
   end
