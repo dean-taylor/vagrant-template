@@ -104,7 +104,7 @@ Vagrant.configure(2) do |config|
       # config.vm.network "forwarded_port", guest: 80, host: 8080
       if host.has_key?('forwarded_ports')
         host['forwarded_ports'].each do |forwarded_port|
-          node.vm.network "forwarded_port", guest: 8000, host_ip: "127.0.0.1", host: 8000, protocol: "tcp", auto_correct: true
+          node.vm.network "forwarded_port", guest: forwarded_port['guest_port'], host_ip: "127.0.0.1", host: forwarded_port['host_port'], protocol: "tcp", auto_correct: true
         end
       end
       if host.has_key?('synced_folders')
