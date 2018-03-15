@@ -59,21 +59,6 @@ Vagrant.configure(2) do |config|
   config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
   config.vm.synced_folder "./puppet", "/etc/puppet", type: "virtualbox"
 
-  # Provider-specific configuration so you can fine-tune various
-  # backing providers for Vagrant. These expose provider-specific options.
-  # Example for VirtualBox:
-  #
-  # config.vm.provider "virtualbox" do |vb|
-  #   # Display the VirtualBox GUI when booting the machine
-  #   vb.gui = true
-  #
-  #   # Customize the amount of memory on the VM:
-  #   vb.memory = "1024"
-  # end
-  #
-  # View the documentation for the provider you are using for more
-  # information on available options.
-
   # Define a Vagrant Push strategy for pushing to Atlas. Other push strategies
   # such as FTP and Heroku are also available. See the documentation at
   # https://docs.vagrantup.com/v2/push/atlas.html for more information.
@@ -97,8 +82,8 @@ Vagrant.configure(2) do |config|
   end
 
   # Provision hosts detailed in vagrant_hosts.yml
-  hosts.each do |host|
-    config.vm.define host['name'] do |node|
+  hosts.each_with_index do |host, index|
+    config.vm.define host['name'], primary: index==0?true:false do |node|
       node.vm.box = "#{host['box']}" if host.has_key?('box')
       node.vm.hostname = "#{host['name']}.#{dir_basename}.#{hostname}"
       # config.vm.network "forwarded_port", guest: 80, host: 8080
@@ -119,7 +104,8 @@ Vagrant.configure(2) do |config|
          # vb.customize ['modifyvm', :id, '--groups', dir_basename]
          if host.has_key?('hdd') && host['hdd'] = 'true'
            vb.customize ['createhd','--filename',"#{host['name']}",'--size',500*1024] unless File.exist?("./#{host['name']}.vdi")
-           vb.customize ['storageattach',:id,'--storagectl','IDE Controller','--port',1,'--device',0,'--type','hdd','--medium',"#{host['name']}.vdi"]
+           vb.customize ['storageattach',:id,'--storagectl','IDE','--port',1,'--device',0,'--type','hdd','--medium',"#{host['name']}.vdi"]
+           #vb.customize ['storageattach',:id,'--storagectl','IDE Controller','--port',1,'--device',0,'--type','hdd','--medium',"#{host['name']}.vdi"]
          end
       end
       if host.has_key?('provisioners')

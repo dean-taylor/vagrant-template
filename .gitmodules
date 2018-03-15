@@ -1,7 +1,0 @@
-[submodule "docker-django"]
-	path = docker-django
-	url = git@github.com:GoHiTech/docker-django.git
-	branch = master
-[submodule "docker-mytardis"]
-	path = docker-mytardis
-	url = git@github.com:UWA-FoS/docker-mytardis.git

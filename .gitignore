@@ -5,3 +5,4 @@
 /tmp/
 /docker-*
 *.log
+/*.vdi
