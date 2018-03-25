@@ -83,7 +83,7 @@ Vagrant.configure(2) do |config|
 
   # Provision hosts detailed in vagrant_hosts.yml
   hosts.each_with_index do |host, index|
-    config.vm.define host['name'], primary: index==0?true:false do |node|
+    config.vm.define host['name'], autostart: host.fetch('autostart', true), primary: index==0?true:false do |node|
       node.vm.box = "#{host['box']}" if host.has_key?('box')
       node.vm.hostname = "#{host['name']}.#{dir_basename}.#{hostname}"
       # config.vm.network "forwarded_port", guest: 80, host: 8080
