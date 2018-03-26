@@ -105,6 +105,12 @@ Vagrant.configure(2) do |config|
           when 'ansible'
             if File.directory?("ansible") and provision.fetch('enable', true)
               node.vm.provision "ansible_local" do |ansible|
+                ansible.install = true
+                ansible.inventory_path = 'inventory'
+                ansible.limit = 'all'
+                ansible.provisioning_path = '/vagrant/ansible'
+                ansible.playbook = 'playbook.yml'
+                ansible.verbose = true
               end
             end
           when 'puppet'
