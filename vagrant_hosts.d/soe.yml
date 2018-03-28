@@ -1,0 +1,8 @@
+- name: soe
+  cpus: 2
+  gui: true
+  memory: 1024
+- name: docker
+  cpus: 2
+  memory: 2048
+  hdd: true

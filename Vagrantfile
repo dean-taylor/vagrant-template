@@ -55,9 +55,8 @@ Vagrant.configure(2) do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
-  config.vm.synced_folder ".", "/home/vagrant/sync", type: "virtualbox"
+  #config.vm.synced_folder ".", "/home/vagrant/sync", type: "virtualbox"
   config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
-  config.vm.synced_folder "./puppet", "/etc/puppet", type: "virtualbox"
 
   # Define a Vagrant Push strategy for pushing to Atlas. Other push strategies
   # such as FTP and Heroku are also available. See the documentation at
@@ -69,27 +68,17 @@ Vagrant.configure(2) do |config|
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
-  config.vm.provision "bootstrap", type: "shell", path: "bootstrap.sh"
+  #config.vm.provision "bootstrap", type: "shell", path: "bootstrap.sh"
   #config.vm.provision "etc_hosts", type: "shell", path: "etc_hosts.sh" if hosts.count > 1
-
-  config.vm.provision "puppet" do |puppet|
-    puppet.manifests_path    = "puppet/manifests"
-    puppet.manifest_file     = "site.pp"
-    puppet.module_path       = "puppet/modules"
-    puppet.hiera_config_path = "puppet/hiera.yaml"
-    puppet.working_directory = "/tmp/vagrant-puppet"
-    puppet.options           = "--verbose"
-  end
 
   # Provision hosts detailed in vagrant_hosts.yml
   hosts.each_with_index do |host, index|
-    config.vm.define host['name'], primary: index==0?true:false do |node|
+    config.vm.define host['name'], autostart: host.fetch('autostart', true), primary: index==0?true:false do |node|
       node.vm.box = "#{host['box']}" if host.has_key?('box')
       node.vm.hostname = "#{host['name']}.#{dir_basename}.#{hostname}"
-      # config.vm.network "forwarded_port", guest: 80, host: 8080
       if host.has_key?('forwarded_ports')
         host['forwarded_ports'].each do |forwarded_port|
-          node.vm.network "forwarded_port", guest: forwarded_port['guest_port'], host_ip: "127.0.0.1", host: forwarded_port['host_port'], protocol: "tcp", auto_correct: true
+          node.vm.network "forwarded_port", guest: forwarded_port['guest_port'], host_ip: "127.0.0.1", host: forwarded_port['host_port'], protocol: forward_port.fetch('protocol', 'tcp'), auto_correct: true
         end
       end
       if host.has_key?('synced_folders')
@@ -110,7 +99,35 @@ Vagrant.configure(2) do |config|
       end
       if host.has_key?('provisioners')
         host['provisioners'].each do |provision|
-          node.vm.provision "#{provision['name']}", type: "shell", path: Dir.glob("bin.d/**/#{provision['script']}")[0]
+          case provision.fetch('type', 'shell')
+          when 'shell'
+            node.vm.provision "#{provision['name']}", type: "shell", path: Dir.glob("bin.d/**/#{provision['script']}")[0] if provision.fetch('type', 'shell') == 'shell'
+          when 'ansible'
+            if File.directory?("ansible") and provision.fetch('enable', true)
+              node.vm.provision "ansible_local" do |ansible|
+                ansible.install = true
+                ansible.inventory_path = 'inventory'
+                ansible.limit = 'all'
+                ansible.provisioning_path = '/vagrant/ansible'
+                ansible.playbook = 'playbook.yml'
+                ansible.verbose = true
+              end
+            end
+          when 'puppet'
+            if File.directory?("puppet") and provision.fetch('enable', true)
+              node.vm.synced_folder "./puppet", "/etc/puppet", type: "virtualbox"
+              node.vm.provision "bootstrap", type: "shell", path: "bootstrap.sh"
+
+              node.vm.provision "puppet" do |puppet|
+                puppet.manifests_path    = ["vm", "/etc/puppet/manifests"]
+                puppet.manifest_file     = "site.pp"
+                puppet.module_path       = ["vm", "/etc/puppet/modules"]
+                puppet.hiera_config_path = ["vm", "puppet/hiera.yaml"]
+                puppet.working_directory = "/tmp/vagrant-puppet"
+                puppet.options           = "--verbose"
+              end
+            end
+          end
         end
       end
     end
