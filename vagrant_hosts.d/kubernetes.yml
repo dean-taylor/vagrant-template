@@ -1,0 +1,17 @@
+- name: kube01
+  box: ubuntu/xenial64
+  provisioners:
+    - type: ansible
+      playbook: vagrant.yml
+- name: kube02
+  autostart: false
+  box: ubuntu/xenial64
+  provisioners:
+    - type: ansible
+- name: kube03
+  autostart: false
+  box: ubuntu/xenial64
+  provisioners:
+    - type: ansible
+- name: etcd
+  box: ubuntu/xenial64

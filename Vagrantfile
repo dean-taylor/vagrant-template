@@ -104,6 +104,12 @@ Vagrant.configure(2) do |config|
             node.vm.provision "#{provision['name']}", type: "shell", path: Dir.glob("bin.d/**/#{provision['script']}")[0] if provision.fetch('type', 'shell') == 'shell'
           when 'ansible'
             if File.directory?("ansible") and provision.fetch('enable', true)
+              node.vm.provision "ansible" do |ansible|
+                ansible.playbook = "ansible/#{provision.fetch('playbook', 'site.yml')}"
+              end
+            end
+          when 'ansible_local'
+            if File.directory?("ansible") and provision.fetch('enable', true)
               node.vm.provision "ansible_local" do |ansible|
                 ansible.install = true
                 ansible.inventory_path = 'inventory'
