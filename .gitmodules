@@ -1,0 +1,3 @@
+[submodule "ansible"]
+	path = ansible
+	url = git@git.gohitech.net:ansible/playbooks.git

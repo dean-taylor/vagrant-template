@@ -68,7 +68,7 @@ Vagrant.configure(2) do |config|
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
-  #config.vm.provision "bootstrap", type: "shell", path: "bootstrap.sh"
+  config.vm.provision "bootstrap", type: "shell", path: "bootstrap.sh"
   #config.vm.provision "etc_hosts", type: "shell", path: "etc_hosts.sh" if hosts.count > 1
 
   # Provision hosts detailed in vagrant_hosts.yml
@@ -122,7 +122,7 @@ Vagrant.configure(2) do |config|
           when 'puppet'
             if File.directory?("puppet") and provision.fetch('enable', true)
               node.vm.synced_folder "./puppet", "/etc/puppet", type: "virtualbox"
-              node.vm.provision "bootstrap", type: "shell", path: "bootstrap.sh"
+              node.vm.provision "bootstrap-puppet", type: "shell", path: "bootstrap-puppet.sh"
 
               node.vm.provision "puppet" do |puppet|
                 puppet.manifests_path    = ["vm", "/etc/puppet/manifests"]
