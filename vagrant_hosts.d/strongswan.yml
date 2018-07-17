@@ -1,0 +1,4 @@
+- name: responder
+  box: ubuntu/xenial64
+- name: initiator
+  box: ubuntu/xenial64
